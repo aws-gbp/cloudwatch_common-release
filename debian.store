@@ -1,1 +1,1 @@
-{"trim": "", "base": "4641cbc", "trimbase": "", "parent": "debian/kinetic/cloudwatch_metrics_common", "previous": "995a06c"}
+{"previous": "c130b32", "trimbase": "", "trim": "", "base": "6b18ff2", "parent": "debian/kinetic/cloudwatch_metrics_common"}
