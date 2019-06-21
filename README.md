@@ -1,3 +1,28 @@
+## cloudwatch_common (kinetic) - 1.0.2-1
+
+The packages in the `cloudwatch_common` repository were released into the `kinetic` distro by running `/usr/local/bin/bloom-release cloudwatch_common --track kinetic --rosdistro kinetic -e` on `Fri, 21 Jun 2019 22:17:01 -0000`
+
+These packages were released:
+- `cloudwatch_logs_common`
+- `cloudwatch_metrics_common`
+
+Version of package(s) in repository `cloudwatch_common`:
+
+- upstream repository: https://github.com/aws-robotics/cloudwatch-common.git
+- release repository: https://github.com/aws-gbp/cloudwatch_common-release.git
+- rosdistro version: `1.0.1-1`
+- old version: `1.0.1-1`
+- new version: `1.0.2-1`
+
+Versions of tools used:
+
+- bloom version: `0.8.0`
+- catkin_pkg version: `0.4.9`
+- rosdep version: `0.15.1`
+- rosdistro version: `0.7.2`
+- vcstools version: `0.1.40`
+
+
 ## cloudwatch_common (kinetic) - 1.0.1-1
 
 The packages in the `cloudwatch_common` repository were released into the `kinetic` distro by running `/usr/local/bin/bloom-release cloudwatch_common --track kinetic --rosdistro kinetic -e` on `Wed, 20 Mar 2019 22:20:39 -0000`
