@@ -19,7 +19,8 @@
 #include <aws/logs/CloudWatchLogsClient.h>
 #include <aws/logs/model/InputLogEvent.h>
 #include <aws/logs/model/PutLogEventsRequest.h>
-#include <cloudwatch_logs_common/ros_cloudwatch_logs_errors.h>
+#include <cloudwatch_logs_common/definitions/ros_cloudwatch_logs_errors.h>
+#include <cloudwatch_logs_common/definitions/definitions.h>
 
 namespace Aws {
 namespace CloudWatchLogs {
@@ -34,24 +35,24 @@ namespace Utils {
  *  This class expects Aws::InitAPI() to have already been called before an instance is constructed
  *
  */
-class CloudWatchFacade
+class CloudWatchLogsFacade
 {
 public:
   /**
-   *  @brief Creates a new CloudWatchFacade
+   *  @brief Creates a new CloudWatchLogsFacade
    *
    *  @param client_config The configuration for the cloudwatch client
    */
-  CloudWatchFacade(const Aws::Client::ClientConfiguration & client_config);
+  CloudWatchLogsFacade(const Aws::Client::ClientConfiguration & client_config);
 
   /**
-   * @brief Creates a new CloudWatchFacade with an existing client
+   * @brief Creates a new CloudWatchLogsFacade with an existing client
    *
    * @param cw_client The client for interacting with cloudwatch
    */
-  CloudWatchFacade(const std::unique_ptr<Aws::CloudWatchLogs::CloudWatchLogsClient> cw_client);
+  CloudWatchLogsFacade(const std::shared_ptr<Aws::CloudWatchLogs::CloudWatchLogsClient> cw_client);
 
-  virtual ~CloudWatchFacade() = default;
+  virtual ~CloudWatchLogsFacade() = default;
 
   /**
    *  @brief Sends a list of logs to CloudWatch
@@ -65,7 +66,7 @@ public:
    */
   virtual Aws::CloudWatchLogs::ROSCloudWatchLogsErrors SendLogsToCloudWatch(
     Aws::String & next_token, const std::string & log_group, const std::string & log_stream,
-    std::list<Aws::CloudWatchLogs::Model::InputLogEvent> * logs);
+    LogCollection & logs);
 
   /**
    * @brief Creates a log group
@@ -122,9 +123,9 @@ public:
     const std::string & log_group, const std::string & log_stream, Aws::String & next_token);
 
 protected:
-  CloudWatchFacade() = default;
-  
-  std::unique_ptr<Aws::CloudWatchLogs::CloudWatchLogsClient> cw_client_;
+
+  CloudWatchLogsFacade() = default;
+  std::shared_ptr<Aws::CloudWatchLogs::CloudWatchLogsClient> cw_client_;
 
 private:
   Aws::CloudWatchLogs::ROSCloudWatchLogsErrors SendLogsRequest(
