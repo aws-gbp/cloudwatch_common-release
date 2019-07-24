@@ -16,18 +16,17 @@ The source code is released under an [Apache 2.0].
 - Melodic
 
 ### Build status
+* Travis CI:
+    * "master" branch [![Build Status](https://travis-ci.org/aws-robotics/cloudwatch-common.svg?branch=master)](https://travis-ci.org/aws-robotics/cloudwatch-common/branches)
+    * "release-latest" branch [![Build Status](https://travis-ci.org/aws-robotics/cloudwatch-common.svg?branch=release-latest)](https://travis-ci.org/aws-robotics/cloudwatch-common/branches)
+* ROS build farm:
+    * ROS Kinetic @ u16.04 Xenial
+        * cloudwatch_metrics_common [![Build Status](http://build.ros.org/job/Kbin_uX64__cloudwatch_metrics_common__ubuntu_xenial_amd64__binary/badge/icon)](http://build.ros.org/job/Kbin_uX64__cloudwatch_metrics_common__ubuntu_xenial_amd64__binary)
+        * cloudwatch_logs_common [![Build Status](http://build.ros.org/job/Kbin_uX64__cloudwatch_logs_common__ubuntu_xenial_amd64__binary/badge/icon)](http://build.ros.org/job/Kbin_uX64__cloudwatch_logs_common__ubuntu_xenial_amd64__binary)
+    * ROS Melodic @ u18.04 Bionic
+        * cloudwatch_metrics_common [![Build Status](http://build.ros.org/job/Mbin_uB64__cloudwatch_metrics_common__ubuntu_bionic_amd64__binary/badge/icon)](http://build.ros.org/job/Mbin_uB64__cloudwatch_metrics_common__ubuntu_bionic_amd64__binary)
+        * cloudwatch_logs_common [![Build Status](http://build.ros.org/job/Mbin_uB64__cloudwatch_logs_common__ubuntu_bionic_amd64__binary/badge/icon)](http://build.ros.org/job/Mbin_uB64__cloudwatch_logs_common__ubuntu_bionic_amd64__binary)
 
-* Travis CI: [![Build Status](https://travis-ci.org/aws-robotics/cloudwatch-common.svg?branch=master)](https://travis-ci.org/aws-robotics/cloudwatch-common)
- * ROS build farm:
-   * ROS Kinetic @ u16.04 Xenial
-       * cloudwatch_metrics_common [![Build Status](http://build.ros.org/job/Kbin_uX64__cloudwatch_metrics_common__ubuntu_xenial_amd64__binary/badge/icon)](http://build.ros.org/job/Kbin_uX64__cloudwatch_metrics_common__ubuntu_xenial_amd64__binary)
-       * cloudwatch_logs_common [![Build Status](http://build.ros.org/job/Kbin_uX64__cloudwatch_logs_common__ubuntu_xenial_amd64__binary/badge/icon)](http://build.ros.org/job/Kbin_uX64__cloudwatch_logs_common__ubuntu_xenial_amd64__binary)
-   * ROS Melodic @ u18.04 Bionic
-       * cloudwatch_metrics_common [![Build Status](http://build.ros.org/job/Mbin_uB64__cloudwatch_metrics_common__ubuntu_bionic_amd64__binary/badge/icon)](http://build.ros.org/job/Mbin_uB64__cloudwatch_metrics_common__ubuntu_bionic_amd64__binary)
-       * cloudwatch_logs_common [![Build Status](http://build.ros.org/job/Mbin_uB64__cloudwatch_logs_common__ubuntu_bionic_amd64__binary/badge/icon)](http://build.ros.org/job/Mbin_uB64__cloudwatch_logs_common__ubuntu_bionic_amd64__binary)
-       
-[Amazon Web Services (AWS)]: https://aws.amazon.com/
-[Apache 2.0]: https://aws.amazon.com/apache-2-0/
 
 ## Installation
 
@@ -47,10 +46,8 @@ To build from source you'll need to create a new workspace, clone and checkout t
 
 - Clone the package into the source directory . 
 
-_Note: Replace __`{MAJOR.VERSION}`__ below with the latest major version number to get the latest release branch._
-
         cd ~/ros-workspace/src
-        git clone https://github.com/aws-robotics/cloudwatch-common.git -b release-v{MAJOR.VERSION}
+        git clone https://github.com/aws-robotics/cloudwatch-common.git -b release-latest
 
 - Install dependencies
 
@@ -67,3 +64,7 @@ _Note: If building the master branch instead of a release branch you may need to
 - Configure ROS library path
 
         source ~/ros-workspace/install/setup.bash
+
+
+[Amazon Web Services (AWS)]: https://aws.amazon.com/
+[Apache 2.0]: https://aws.amazon.com/apache-2-0/
