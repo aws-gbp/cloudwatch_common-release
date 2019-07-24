@@ -26,33 +26,49 @@
 #include <aws/logs/model/InputLogEvent.h>
 #include <aws/logs/model/LogStream.h>
 #include <aws/logs/model/PutLogEventsRequest.h>
-#include <cloudwatch_logs_common/ros_cloudwatch_logs_errors.h>
-#include <cloudwatch_logs_common/utils/cloudwatch_facade.h>
+#include <cloudwatch_logs_common/definitions/ros_cloudwatch_logs_errors.h>
+#include <cloudwatch_logs_common/utils/cloudwatch_logs_facade.h>
+#include <cloudwatch_logs_common/definitions/definitions.h>
 
 using namespace Aws::CloudWatchLogs::Utils;
 
 constexpr uint16_t kMaxLogsPerRequest = 100;
 
-CloudWatchFacade::CloudWatchFacade(const Aws::Client::ClientConfiguration & client_config)
+CloudWatchLogsFacade::CloudWatchLogsFacade(const Aws::Client::ClientConfiguration & client_config)
 {
-  this->cw_client_ = std::make_unique<Aws::CloudWatchLogs::CloudWatchLogsClient>(client_config);
+  this->cw_client_ = std::make_shared<Aws::CloudWatchLogs::CloudWatchLogsClient>(client_config);
 }
 
-CloudWatchFacade::CloudWatchFacade(std::unique_ptr<Aws::CloudWatchLogs::CloudWatchLogsClient> cw_client)
-: cw_client_(std::move(cw_client))
+CloudWatchLogsFacade::CloudWatchLogsFacade(const std::shared_ptr<Aws::CloudWatchLogs::CloudWatchLogsClient> cw_client)
 {
+  this->cw_client_ = cw_client;
 }
 
-Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::SendLogsRequest(
+Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchLogsFacade::SendLogsRequest(
   const Aws::CloudWatchLogs::Model::PutLogEventsRequest & request, Aws::String & next_token)
 {
   Aws::CloudWatchLogs::ROSCloudWatchLogsErrors status = CW_LOGS_SUCCEEDED;
   auto response = this->cw_client_->PutLogEvents(request);
   if (!response.IsSuccess()) {
-    status = CW_LOGS_FAILED;
+
     AWS_LOGSTREAM_ERROR(__func__, "Send log request failed due to: "
                                     << response.GetError().GetMessage() << ", with error code: "
                                     << static_cast<int>(response.GetError().GetErrorType()));
+
+    switch(response.GetError().GetErrorType()) {
+
+      case Aws::CloudWatchLogs::CloudWatchLogsErrors::NETWORK_CONNECTION:
+        status = CW_LOGS_NOT_CONNECTED;
+        break;
+      case Aws::CloudWatchLogs::CloudWatchLogsErrors::INVALID_PARAMETER_COMBINATION:
+      case Aws::CloudWatchLogs::CloudWatchLogsErrors::INVALID_PARAMETER_VALUE:
+      case Aws::CloudWatchLogs::CloudWatchLogsErrors::MISSING_PARAMETER:
+        status = CW_LOGS_INVALID_PARAMETER;
+        break;
+      default:
+        status = CW_LOGS_FAILED;
+    }
+
   } else {
     AWS_LOG_DEBUG(__func__, "Setting the sequence token to use for the next send log request.");
     next_token = response.GetResult().GetNextSequenceToken();
@@ -61,25 +77,18 @@ Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::SendLogsRequest(
   return status;
 }
 
-Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::SendLogsToCloudWatch(
+Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchLogsFacade::SendLogsToCloudWatch(
   Aws::String & next_token, const std::string & log_group, const std::string & log_stream,
-  std::list<Aws::CloudWatchLogs::Model::InputLogEvent> * logs)
+  LogCollection & logs)
 {
   Aws::CloudWatchLogs::ROSCloudWatchLogsErrors status = CW_LOGS_SUCCEEDED;
   Aws::Vector<Aws::CloudWatchLogs::Model::InputLogEvent> events;
-
-  if (nullptr == logs) {
-    status = CW_LOGS_NULL_PARAMETER;
-    AWS_LOGSTREAM_WARN(__func__, "Internal error occurred, error code: "
-                                   << status
-                                   << ", quit attempting to send logs to CloudWatch in Log Group: "
-                                   << log_group << " Log Stream: " << log_stream << ".");
-    return status;
-  } else if (logs->empty()) {
+  if (logs.empty()) {
     status = CW_LOGS_EMPTY_PARAMETER;
     AWS_LOGSTREAM_WARN(__func__,
-                       "Log set is empty, quit attempting to send logs to CloudWatch in Log Group: "
-                         << log_group << " Log Stream: " << log_stream << ".");
+                       "Log set is empty, "
+                         << log_group << " Log Stream: " <<
+                         log_stream << ".");
     return status;
   }
 
@@ -91,7 +100,7 @@ Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::SendLogsToCloudWa
     request.SetSequenceToken(next_token);
   }
 
-  for (auto it = logs->begin(); it != logs->end(); ++it) {
+  for (auto it = logs.begin(); it != logs.end(); ++it) {
     events.push_back(*it);
     if (events.size() >= kMaxLogsPerRequest) {
       request.SetLogEvents(events);
@@ -102,12 +111,11 @@ Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::SendLogsToCloudWa
     if (CW_LOGS_SUCCEEDED != status) {
       AWS_LOGSTREAM_ERROR(__func__, "Failed to send to CloudWatch in Log Group: "
                                       << log_group << " Log Stream: " << log_stream
-                                      << " with error code: " << status
-                                      << ". Dropping this batch of logs.");
+                                      << " with error code: " << status);
       return status;
     } else {
       AWS_LOGSTREAM_DEBUG(__func__,
-                         "A batch of log was successfully sent to CloudWatch in Log Group: "
+                         "A batch of logs was successfully sent to CloudWatch in Log Group: "
                            << log_group << " Log Stream: " << log_stream << ".");
     }
   }
@@ -118,10 +126,9 @@ Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::SendLogsToCloudWa
     if (CW_LOGS_SUCCEEDED != status) {
       AWS_LOGSTREAM_ERROR(__func__, "Failed to send to CloudWatch in Log Group: "
                                       << log_group << " Log Stream: " << log_stream
-                                      << " with error code: " << status
-                                      << ". Dropping the last bit of this batch of logs.");
+                                      << " with error code: " << status);
     } else {
-      AWS_LOGSTREAM_DEBUG(__func__, "All logs were successfully sent to CloudWatch in Log Group: "
+      AWS_LOGSTREAM_DEBUG(__func__, "All queued logs were successfully sent to CloudWatch in Log Group: "
                                      << log_group << " Log Stream: " << log_stream << ".");
     }
   }
@@ -129,7 +136,7 @@ Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::SendLogsToCloudWa
   return status;
 }
 
-Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::CreateLogGroup(
+Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchLogsFacade::CreateLogGroup(
   const std::string & log_group)
 {
   Aws::CloudWatchLogs::ROSCloudWatchLogsErrors status = CW_LOGS_SUCCEEDED;
@@ -139,13 +146,18 @@ Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::CreateLogGroup(
 
   const auto & response = this->cw_client_->CreateLogGroup(log_group_request);
   if (!response.IsSuccess()) {
+
     AWS_LOGSTREAM_ERROR(
       __func__, "Failed to create Log Group :"
                   << log_group << " due to: " << response.GetError().GetMessage()
                   << ", with error code: " << static_cast<int>(response.GetError().GetErrorType()));
+
     if (response.GetError().GetErrorType() ==
         Aws::CloudWatchLogs::CloudWatchLogsErrors::RESOURCE_ALREADY_EXISTS) {
       status = CW_LOGS_LOG_GROUP_ALREADY_EXISTS;
+
+    } else if(response.GetError().GetErrorType() == Aws::CloudWatchLogs::CloudWatchLogsErrors::NETWORK_CONNECTION) {
+      status = CW_LOGS_NOT_CONNECTED;
     } else {
       status = CW_LOGS_CREATE_LOG_GROUP_FAILED;
     }
@@ -154,7 +166,7 @@ Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::CreateLogGroup(
   return status;
 }
 
-Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::CheckLogGroupExists(
+Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchLogsFacade::CheckLogGroupExists(
   const std::string & log_group)
 {
   Aws::CloudWatchLogs::ROSCloudWatchLogsErrors status = CW_LOGS_LOG_GROUP_NOT_FOUND;
@@ -170,11 +182,18 @@ Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::CheckLogGroupExis
 
     const auto & response = this->cw_client_->DescribeLogGroups(describe_log_group_request);
     if (!response.IsSuccess()) {
-      status = CW_LOGS_FAILED;
+
+      if(response.GetError().GetErrorType() == Aws::CloudWatchLogs::CloudWatchLogsErrors::NETWORK_CONNECTION) {
+        status = CW_LOGS_NOT_CONNECTED;
+      } else {
+        status = CW_LOGS_FAILED;
+      }
+
       AWS_LOGSTREAM_WARN(__func__, "Request to check if log group named "
               << log_group << " exists failed. Error message: "
               << response.GetError().GetMessage() << ", with error code: "
               << static_cast<int>(response.GetError().GetErrorType()));
+
       break;
     }
 
@@ -198,7 +217,7 @@ Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::CheckLogGroupExis
   return status;
 }
 
-Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::CreateLogStream(
+Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchLogsFacade::CreateLogStream(
   const std::string & log_group, const std::string & log_stream)
 {
   Aws::CloudWatchLogs::ROSCloudWatchLogsErrors status = CW_LOGS_SUCCEEDED;
@@ -209,6 +228,7 @@ Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::CreateLogStream(
 
   const auto & response = this->cw_client_->CreateLogStream(log_stream_request);
   if (!response.IsSuccess()) {
+
     AWS_LOGSTREAM_ERROR(__func__, "Failed to create Log Stream :"
                                     << log_stream << " in Log Group :" << log_group << " due to: "
                                     << response.GetError().GetMessage() << ", with error code: "
@@ -216,6 +236,8 @@ Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::CreateLogStream(
     if (response.GetError().GetErrorType() ==
         Aws::CloudWatchLogs::CloudWatchLogsErrors::RESOURCE_ALREADY_EXISTS) {
       status = CW_LOGS_LOG_STREAM_ALREADY_EXISTS;
+    } else if(response.GetError().GetErrorType() == Aws::CloudWatchLogs::CloudWatchLogsErrors::NETWORK_CONNECTION) {
+      status = CW_LOGS_NOT_CONNECTED;
     } else {
       status = CW_LOGS_CREATE_LOG_STREAM_FAILED;
     }
@@ -224,7 +246,7 @@ Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::CreateLogStream(
   return status;
 }
 
-Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::CheckLogStreamExists(
+Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchLogsFacade::CheckLogStreamExists(
   const std::string & log_group, const std::string & log_stream,
   Aws::CloudWatchLogs::Model::LogStream * log_stream_object)
 {
@@ -242,7 +264,14 @@ Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::CheckLogStreamExi
 
     const auto & response = this->cw_client_->DescribeLogStreams(describe_log_stream_request);
     if (!response.IsSuccess()) {
-      status = CW_LOGS_FAILED;
+
+      if(response.GetError().GetErrorType() == Aws::CloudWatchLogs::CloudWatchLogsErrors::NETWORK_CONNECTION) {
+        status = CW_LOGS_NOT_CONNECTED;
+
+      } else {
+        status = CW_LOGS_FAILED;
+      }
+
       AWS_LOGSTREAM_WARN(
               __func__, "Request to check if log stream named "
                       << log_stream << " exists in log group named: " << log_group
@@ -276,13 +305,17 @@ Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::CheckLogStreamExi
   return status;
 }
 
-Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchFacade::GetLogStreamToken(
+Aws::CloudWatchLogs::ROSCloudWatchLogsErrors CloudWatchLogsFacade::GetLogStreamToken(
   const std::string & log_group, const std::string & log_stream, Aws::String & next_token)
 {
   Aws::CloudWatchLogs::ROSCloudWatchLogsErrors status = CW_LOGS_SUCCEEDED;
   Aws::CloudWatchLogs::Model::LogStream log_stream_object;
   if (CW_LOGS_SUCCEEDED != CheckLogStreamExists(log_group, log_stream, &log_stream_object)) {
-    status = CW_LOGS_LOG_STREAM_NOT_FOUND;
+
+    if ( status != CW_LOGS_NOT_CONNECTED) {
+      status = CW_LOGS_LOG_STREAM_NOT_FOUND;
+    }
+
     AWS_LOGSTREAM_ERROR(__func__, "Failed to obtain sequence token due to Log Stream: "
                                     << log_stream << " in Log Group :" << log_group
                                     << " doesn't exist.");
