@@ -19,10 +19,22 @@
 #include <aws/monitoring/CloudWatchClient.h>
 #include <aws/monitoring/model/MetricDatum.h>
 #include <aws_common/sdk_utils/aws_error.h>
+#include <cloudwatch_metrics_common/definitions/definitions.h>
 
 namespace Aws {
-namespace CloudWatch {
+namespace CloudWatchMetrics {
 namespace Utils {
+
+/**
+ * Used to wrap the Aws::CloudWatch::CloudWatchErrors. The current interesting states, that are handled given
+ * the AWS SDK returns, are success, failure, invalid data, and not connected to the internet / CloudWatch service.
+ */
+enum CloudWatchMetricsStatus {
+    SUCCESS,  // the CloudWatch API call was successful
+    FAILURE,  // the CloudWatch API call failed for some reason
+    NETWORK_FAILURE,  // the CloudWatch API call returned a timeout / not connected error
+    INVALID_DATA  // invalid data was attempted to be published
+};
 
 /**
  *  @brief This class is a simple Facade over the CloudWatch client.
@@ -33,15 +45,20 @@ namespace Utils {
  *  This class expects Aws::InitAPI() to have already been called before an instance is constructed
  *
  */
-class CloudWatchFacade
+class CloudWatchMetricsFacade
 {
 public:
   /**
-   *  @brief Creates a new CloudWatchFacade
+   *  @brief Creates a new CloudWatchMetricsFacade
    *  @param client_config The configuration for the cloudwatch client
    */
-  CloudWatchFacade(const Aws::Client::ClientConfiguration & client_config);
-  virtual ~CloudWatchFacade() = default;
+  CloudWatchMetricsFacade(const Aws::Client::ClientConfiguration & client_config);
+  /**
+   * @brief Creates a new CloudWatchMetricsFacade with an existing client
+   * @param cw_client The client for interacting with cloudwatch
+   */
+  CloudWatchMetricsFacade(const std::shared_ptr<Aws::CloudWatch::CloudWatchClient> cw_client);
+  virtual ~CloudWatchMetricsFacade() = default;
 
   /**
    *  @brief Sends a list of metrics to CloudWatch
@@ -53,17 +70,18 @@ public:
    *  @return An error code that will be Aws::AwsError::AWS_ERR_OK if all metrics were sent
    * successfully.
    */
-  virtual Aws::AwsError SendMetricsToCloudWatch(
-    const std::string & metric_namespace, std::list<Aws::CloudWatch::Model::MetricDatum> * metrics);
+  virtual CloudWatchMetricsStatus SendMetricsToCloudWatch(
+    const std::string & metric_namespace, MetricDatumCollection & metrics);
 
 protected:
-  CloudWatchFacade() = default;
+  CloudWatchMetricsFacade() = default;
 
 private:
-  Aws::CloudWatch::CloudWatchClient cw_client_;
-  Aws::AwsError SendMetricsRequest(const Aws::CloudWatch::Model::PutMetricDataRequest & request);
+
+  std::shared_ptr<Aws::CloudWatch::CloudWatchClient> cw_client_;
+  CloudWatchMetricsStatus SendMetricsRequest(const Aws::CloudWatch::Model::PutMetricDataRequest & request);
 };
 
 }  // namespace Utils
-}  // namespace CloudWatch
+}  // namespace CloudWatchMetrics
 }  // namespace Aws
