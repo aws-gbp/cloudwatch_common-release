@@ -15,39 +15,46 @@
 
 #pragma once
 
-#include <cloudwatch_logs_common/log_manager.h>
+#include <cloudwatch_logs_common/log_batcher.h>
 #include <cloudwatch_logs_common/log_publisher.h>
+#include <cloudwatch_logs_common/log_service.h>
+
+#include <cloudwatch_logs_common/cloudwatch_options.h>
 
 namespace Aws {
 namespace CloudWatchLogs {
 
-class LogManagerFactory
+// todo should we validate options here?
+
+class LogServiceFactory
 {
 public:
-  LogManagerFactory() = default;
-  ~LogManagerFactory() = default;
+  LogServiceFactory() = default;
+  ~LogServiceFactory() = default;
 
   /**
-   *  @brief Creates a new LogManager object
-   *  Factory method used to create a new LogManager object, along with a creating and starting a
-   * LogPublisher for use with the LogManager.
+   *  @brief Creates a new LogService object
+   *  Factory method used to create a new LogService object, along with a creating and starting a
+   * LogPublisher for use with the LogService.
    *
    *  @param client_config The client configuration to use when creating the CloudWatch clients
    *  @param options The options used for the AWS SDK when creating and publishing with a CloudWatch
    * client
    *
-   *  @return An instance of LogManager
+   *  @return An instance of LogService
    */
-  virtual std::shared_ptr<LogManager> CreateLogManager(
-    const std::string & log_group, const std::string & log_stream,
-    const Aws::Client::ClientConfiguration & client_config, const Aws::SDKOptions & sdk_options);
-
+  virtual std::shared_ptr<LogService> CreateLogService(
+    const std::string & log_group,
+    const std::string & log_stream,
+    const Aws::Client::ClientConfiguration & client_config,
+    const Aws::SDKOptions & sdk_options,
+    const CloudWatchOptions & cloudwatch_options = kDefaultCloudWatchOptions);
 private:
   /**
    * Block copy constructor and assignment operator for Factory object.
    */
-  LogManagerFactory(const LogManagerFactory &) = delete;
-  LogManagerFactory & operator=(const LogManagerFactory &) = delete;
+  LogServiceFactory(const LogServiceFactory &) = delete;
+  LogServiceFactory & operator=(const LogServiceFactory &) = delete;
 };
 
 }  // namespace CloudWatchLogs
