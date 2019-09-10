@@ -1,3 +1,30 @@
+## cloudwatch_common (dashing) - 1.1.1-0
+
+The packages in the `cloudwatch_common` repository were released into the `dashing` distro by running `/usr/local/bin/bloom-release cloudwatch_common --track dashing --rosdistro dashing -e` on `Tue, 10 Sep 2019 18:58:57 -0000`
+
+These packages were released:
+- `cloudwatch_logs_common`
+- `cloudwatch_metrics_common`
+- `dataflow_lite`
+- `file_management`
+
+Version of package(s) in repository `cloudwatch_common`:
+
+- upstream repository: https://github.com/aws-robotics/cloudwatch-common.git
+- release repository: https://github.com/aws-gbp/cloudwatch_common-release.git
+- rosdistro version: `1.1.0-1`
+- old version: `1.1.0-1`
+- new version: `1.1.1-0`
+
+Versions of tools used:
+
+- bloom version: `0.7.2`
+- catkin_pkg version: `0.4.13`
+- rosdep version: `0.15.2`
+- rosdistro version: `0.7.4`
+- vcstools version: `0.1.40`
+
+
 ## cloudwatch_common (dashing) - 1.1.0-1
 
 The packages in the `cloudwatch_common` repository were released into the `dashing` distro by running `/home/ANT.AMAZON.COM/miaofei/.local/bin/bloom-release cloudwatch_common --track dashing --rosdistro dashing -e` on `Fri, 06 Sep 2019 22:43:32 -0000`
