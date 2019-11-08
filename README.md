@@ -1,3 +1,30 @@
+## cloudwatch_common (melodic) - 1.1.2-1
+
+The packages in the `cloudwatch_common` repository were released into the `melodic` distro by running `/home/ANT.AMAZON.COM/burekn/.local/bin/bloom-release cloudwatch_common --track melodic --rosdistro melodic -e` on `Fri, 08 Nov 2019 00:22:42 -0000`
+
+These packages were released:
+- `cloudwatch_logs_common`
+- `cloudwatch_metrics_common`
+- `dataflow_lite`
+- `file_management`
+
+Version of package(s) in repository `cloudwatch_common`:
+
+- upstream repository: https://github.com/aws-robotics/cloudwatch-common.git
+- release repository: https://github.com/aws-gbp/cloudwatch_common-release.git
+- rosdistro version: `1.1.0-1`
+- old version: `1.1.0-1`
+- new version: `1.1.2-1`
+
+Versions of tools used:
+
+- bloom version: `0.9.0`
+- catkin_pkg version: `0.4.14`
+- rosdep version: `0.17.1`
+- rosdistro version: `0.7.5`
+- vcstools version: `0.1.42`
+
+
 ## cloudwatch_common (kinetic) - 1.1.2-1
 
 The packages in the `cloudwatch_common` repository were released into the `kinetic` distro by running `/home/ANT.AMAZON.COM/burekn/.local/bin/bloom-release cloudwatch_common --track kinetic --rosdistro kinetic -e` on `Fri, 08 Nov 2019 00:18:26 -0000`
