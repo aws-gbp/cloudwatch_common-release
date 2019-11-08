@@ -14,8 +14,21 @@ Changelog for package file_management
 * Resolved false-positive error log messages
 * Contributors: Abby Xu, Ross Desmond, Ryan Newell, Yuan "Forrest" Yu, hortala
 
-1.1.0 (2019-07-24)
+1.1.2 (2019-11-07)
 ------------------
+* Increase package version numbers to 1.1.2 (`#44 <https://github.com/aws-robotics/cloudwatch-common/issues/44>`_)
+* Fixes a bug where we did not null check the result of getting the HOM… (`#43 <https://github.com/aws-robotics/cloudwatch-common/issues/43>`_)
+  Fixes a bug where we did not null check the result of getting the HOME env variable and also switches to create_directories instead of create_directory so that it doesn't SIGABRT when asked to create multiple levels of a directory.
+* Contributors: Nick Burek
+
+1.1.1 (2019-09-10)
+------------------
+* Disable error on cast-align warning to support ARMhf builds (`#41 <https://github.com/aws-robotics/cloudwatch-common/issues/41>`_)
+  * Remove -Wcast-align flag to support ARMhf builds
+  *  - bumped versions to 1.1.1
+  - restored cast-align, but added as a warning
+  - removed unused headers
+  * Removed duplicate Werror
 * modify changelist to be compatible with catkin_generate_changelog (`#39 <https://github.com/aws-robotics/cloudwatch-common/issues/39>`_)
   Signed-off-by: Miaofei <miaofei@amazon.com>
 * synchronize version of new packages with rest of the packages in the repo (`#38 <https://github.com/aws-robotics/cloudwatch-common/issues/38>`_)
