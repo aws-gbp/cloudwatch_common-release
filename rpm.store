@@ -1,1 +1,1 @@
-{"trim": "", "base": "3f33643", "trimbase": "", "parent": "rpm/melodic/cloudwatch_logs_common", "previous": "6bba963"}
+{"base": "5c75883", "parent": "rpm/melodic/cloudwatch_logs_common", "previous": "2734cf4", "trim": "", "trimbase": ""}
