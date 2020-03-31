@@ -1,1 +1,1 @@
-{"base": "159f3ae", "previous": "668c8f2", "trimbase": "", "trim": "", "parent": "release/dashing/cloudwatch_logs_common"}
+{"parent": "release/dashing/cloudwatch_logs_common", "base": "81327ef", "previous": "b7b0692", "trimbase": "", "trim": ""}
