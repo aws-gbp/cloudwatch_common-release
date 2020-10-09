@@ -14,6 +14,8 @@
  */
 
 #pragma once
+#include <queue>
+#include <tuple>
 #include <aws/logs/model/InputLogEvent.h>
 
 #include <cloudwatch_logs_common/definitions/ros_cloudwatch_logs_errors.h>
@@ -44,7 +46,7 @@ class LogFileManager :
     : FileManager(options) {
   }
 
-  explicit LogFileManager(const std::shared_ptr<FileManagerStrategy> &file_manager_strategy)
+  explicit LogFileManager(const std::shared_ptr<Aws::FileManagement::DataManagerStrategy> &file_manager_strategy)
       : FileManager(file_manager_strategy)
   {
   }
@@ -53,9 +55,25 @@ class LogFileManager :
 
   void write(const LogCollection & data) override;
 
+  /*  
+    AWSClient will return 'InvalidParameterException' error when the log events in a
+    single batch span more than 24 hours. Therefore the readBatch function will only
+    return as many logs as can fit within the 24 hour span and the actual number of 
+    logs batched may end up being less than the original batch_size.
+
+    We must sort the log data chronologically because it is not guaranteed
+    to be ordered chronologically in the file, but CloudWatch requires all
+    puts in a single batch to be sorted chronologically
+  */
   FileObject<LogCollection> readBatch(size_t batch_size) override;
+
+  using Timestamp = long;
+  Timestamp latestTime = 0;
 };
 
 }  // namespace Utils
+
+  const long ONE_DAY_IN_MILLISEC = 24*60*60*1000;
+  const long TWO_WEEK_IN_MILLISEC = 14*ONE_DAY_IN_MILLISEC;
 }  // namespace CloudWatchLogs
 }  // namespace Aws
