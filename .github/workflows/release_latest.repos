@@ -1,5 +1,0 @@
-repositories:
-  cloudwatch-common:
-    type: git
-    url: https://github.com/aws-robotics/cloudwatch-common
-    version: release-latest
